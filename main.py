@@ -1,53 +1,67 @@
 import flet as ft 
-
+from datetime import datetime
 
 def main(page: ft.Page):
     page.title = 'Моё первое приложение'
     page.theme_mode = ft.ThemeMode.LIGHT
 
     greeting_text = ft.Text("Hello world")
-    greeting_text1 = ft.Text("Hello world")
-    name_input = ft.TextField(label="Введите имя:")
-    age_input = ft.TextField(label="Введите возраст:")
+
+    greeting_history = []
+    history_text = ft.Text("История приветствий:")
+
 
     def on_button_click(_):
         name = name_input.value.strip()
-        age = age_input.value.strip()
         print(name)
-        print(age)
 
-        if name and age:
+        if name:
             greeting_text.value = f"Hello {name}"
-            greeting_text1.value = f"Привет {name}, тебе {age} лет"
             name_input.value = ""
-            age_input.value = ""
+
+            timestamp = datetime.now().strftime("%H:%M:%S")
+            greeting_history.append(f"{timestamp} {name}")
+            history_text.value = "История приветствий:\n" + "\n".join(greeting_history) 
         else:
             print("User ничего не ввел")
             greeting_text.value = 'Пожалуйста, введите имя!'
-            greeting_text1.value = 'Пожалуйста, введите возраст!'
 
         page.update()
-        
+
+    def clear_history(_):
+        greeting_history.clear()
+        history_text.value = 'История приветствий'
+        page.update()
     
-    def change_theme(_):
-        if page.theme_mode == ft.ThemeMode.LIGHT:
-            page.theme_mode = ft.ThemeMode.DARK
+    def sorted_history(_):
+        greeting_history.sort(key=lambda x: x.split(" ", 1)[1])
+        history_text.value = "История приветствий:\n" + "\n".join(greeting_history)
+        page.update()
+
+    def last_delete(_):
+        if greeting_history:
+            greeting_history.pop()
+            history_text.value = "История приветствий:\n" + "\n".join(greeting_history)
         else:
-            page.theme_mode = ft.ThemeMode.LIGHT
+            print("Ваш список пустой")
 
         page.update()
-            
 
 
-
+    name_input = ft.TextField(label="Введите имя:", on_submit=on_button_click, expand=True)
     name_button = ft.ElevatedButton('SEND', icon=ft.Icons.SEND, on_click=on_button_click)
-    change_theme_button = ft.IconButton(icon=ft.Icons.BRIGHTNESS_7, on_click=change_theme)
-    
+    clear_button = ft.IconButton(icon=ft.Icons.DELETE, on_click=clear_history)
+    sort_button = ft.IconButton(icon=ft.Icons.SORT, on_click=sorted_history)
+    delete_last_button = ft.IconButton(icon=ft.Icons.DELETE_FOREVER_SHARP, on_click=last_delete)
     # name_button_text = ft.TextButton("SEND")
     # name_button_icon = ft.IconButton(icon=ft.Icons.SEND)
 
-    page.add(greeting_text, name_input, greeting_text1,age_input , name_button, change_theme_button)
-
+    # page.add(greeting_text, name_input, name_button, clear_button, history_text)
+    page.add(greeting_text, 
+             ft.Row([name_input, name_button, clear_button], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+             history_text,
+             ft.Row([sort_button, delete_last_button], alignment=ft.MainAxisAlignment.SPACE_BETWEEN),
+             )
+    
 
 ft.app(target=main, view=ft.WEB_BROWSER)
-
